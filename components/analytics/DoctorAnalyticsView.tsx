@@ -59,8 +59,8 @@ export const DoctorAnalyticsView: React.FC = () => {
 
           <Card className="p-5 border-slate-200 bg-white rounded-2xl space-y-1 shadow-xs">
             <span className="text-xs font-bold text-slate-400 block">Net Earnings</span>
-            <div className="text-2xl font-black text-emerald-700">₹{data.totalEarningsInINR.toFixed(2)}</div>
-            <p className="text-[11px] text-slate-500">Available: ₹{data.availableBalanceInINR.toFixed(2)}</p>
+            <div className="text-2xl font-black text-emerald-700">₹{(Number(data?.totalEarningsInINR) || 0).toFixed(2)}</div>
+            <p className="text-[11px] text-slate-500">Available: ₹{(Number(data?.availableBalanceInINR) || 0).toFixed(2)}</p>
           </Card>
         </div>
       )}

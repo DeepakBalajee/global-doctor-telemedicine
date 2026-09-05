@@ -61,19 +61,19 @@ export const SuperAdminFinancialPanel: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-5 border-slate-200 bg-white rounded-2xl space-y-1 shadow-xs">
           <span className="text-xs font-bold text-slate-400 block">Total Gross Revenue</span>
-          <div className="text-2xl font-black text-emerald-700">₹{totalRevenue.toFixed(2)} INR</div>
+          <div className="text-2xl font-black text-emerald-700">₹{(Number(totalRevenue) || 0).toFixed(2)} INR</div>
           <p className="text-[11px] text-slate-500">Fee Rate: ₹5.00 INR per consultation</p>
         </Card>
 
         <Card className="p-5 border-slate-200 bg-white rounded-2xl space-y-1 shadow-xs">
           <span className="text-xs font-bold text-slate-400 block">Platform Share (10%)</span>
-          <div className="text-2xl font-black text-slate-900">₹{(totalRevenue * 0.1).toFixed(2)} INR</div>
+          <div className="text-2xl font-black text-slate-900">₹{(Number(totalRevenue * 0.1) || 0).toFixed(2)} INR</div>
           <p className="text-[11px] text-slate-500">Net Platform Revenue</p>
         </Card>
 
         <Card className="p-5 border-slate-200 bg-white rounded-2xl space-y-1 shadow-xs">
           <span className="text-xs font-bold text-slate-400 block">Doctor Share (90%)</span>
-          <div className="text-2xl font-black text-teal-700">₹{(totalRevenue * 0.9).toFixed(2)} INR</div>
+          <div className="text-2xl font-black text-teal-700">₹{(Number(totalRevenue * 0.9) || 0).toFixed(2)} INR</div>
           <p className="text-[11px] text-slate-500">Allocated Doctor Net Earnings</p>
         </Card>
       </div>
@@ -114,7 +114,7 @@ export const SuperAdminFinancialPanel: React.FC = () => {
                         {t.type}
                       </span>
                     </td>
-                    <td className="p-3 font-extrabold text-slate-900">₹{t.amount.toFixed(2)}</td>
+                    <td className="p-3 font-extrabold text-slate-900">₹{(Number(t?.amount) || 0).toFixed(2)}</td>
                     <td className="p-3 text-slate-600 line-clamp-1">{t.reference}</td>
                     <td className="p-3">
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-900">

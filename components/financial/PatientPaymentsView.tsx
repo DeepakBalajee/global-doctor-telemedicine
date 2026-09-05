@@ -62,7 +62,7 @@ export const PatientPaymentsView: React.FC = () => {
                   <tr key={p.id} className="hover:bg-slate-50">
                     <td className="p-3 font-mono font-bold text-slate-900">{p.id}</td>
                     <td className="p-3 font-semibold">{p.doctorName}</td>
-                    <td className="p-3 font-extrabold text-emerald-800">₹{p.amount.toFixed(2)} INR</td>
+                    <td className="p-3 font-extrabold text-emerald-800">₹{(Number(p?.amount) || 0).toFixed(2)} INR</td>
                     <td className="p-3 font-mono text-slate-500">{p.gatewayTransactionId}</td>
                     <td className="p-3">
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900">

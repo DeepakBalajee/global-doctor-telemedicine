@@ -59,7 +59,7 @@ export const PatientActivityView: React.FC = () => {
 
           <Card className="p-5 border-slate-200 bg-white rounded-2xl space-y-1 shadow-xs">
             <span className="text-xs font-bold text-slate-400 block">Total Paid</span>
-            <div className="text-2xl font-black text-emerald-700">₹{data.totalPaymentsInINR.toFixed(2)}</div>
+            <div className="text-2xl font-black text-emerald-700">₹{(Number(data?.totalPaymentsInINR) || 0).toFixed(2)}</div>
             <p className="text-[11px] text-slate-500">Verified Payments</p>
           </Card>
         </div>

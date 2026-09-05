@@ -92,7 +92,7 @@ export const SuperAdminAnalyticsView: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="p-5 border-slate-200 bg-white rounded-2xl space-y-1">
                 <span className="text-xs font-bold text-slate-400 block">Total Revenue</span>
-                <div className="text-2xl font-black text-emerald-700">₹{analytics.grossRevenueInINR.toFixed(2)}</div>
+                <div className="text-2xl font-black text-emerald-700">₹{(Number(analytics?.grossRevenueInINR) || 0).toFixed(2)}</div>
                 <p className="text-[11px] text-slate-500">10% Platform / 90% Doctor Split</p>
               </Card>
 
@@ -159,19 +159,19 @@ export const SuperAdminAnalyticsView: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card className="p-5 border-slate-200 bg-white rounded-2xl space-y-2">
                 <span className="text-xs font-bold text-slate-400 block">Gross Consultation Revenue</span>
-                <div className="text-2xl font-black text-slate-900">₹{analytics.grossRevenueInINR.toFixed(2)} INR</div>
+                <div className="text-2xl font-black text-slate-900">₹{(Number(analytics?.grossRevenueInINR) || 0).toFixed(2)} INR</div>
                 <p className="text-[11px] text-slate-500">Fee: ₹5.00 INR Per Consultation</p>
               </Card>
 
               <Card className="p-5 border-slate-200 bg-white rounded-2xl space-y-2">
                 <span className="text-xs font-bold text-slate-400 block">Platform Fee Share (10%)</span>
-                <div className="text-2xl font-black text-purple-700">₹{analytics.platformRevenueInINR.toFixed(2)} INR</div>
+                <div className="text-2xl font-black text-purple-700">₹{(Number(analytics?.platformRevenueInINR) || 0).toFixed(2)} INR</div>
                 <p className="text-[11px] text-slate-500">Net Platform Income</p>
               </Card>
 
               <Card className="p-5 border-slate-200 bg-white rounded-2xl space-y-2">
                 <span className="text-xs font-bold text-slate-400 block">Doctor Net Earnings Share (90%)</span>
-                <div className="text-2xl font-black text-teal-700">₹{analytics.doctorEarningsInINR.toFixed(2)} INR</div>
+                <div className="text-2xl font-black text-teal-700">₹{(Number(analytics?.doctorEarningsInINR) || 0).toFixed(2)} INR</div>
                 <p className="text-[11px] text-slate-500">Allocated Doctor Share</p>
               </Card>
             </div>

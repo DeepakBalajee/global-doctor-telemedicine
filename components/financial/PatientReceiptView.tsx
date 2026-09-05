@@ -84,7 +84,7 @@ export const PatientReceiptView: React.FC<PatientReceiptViewProps> = ({ payment 
                   <td className="p-3 font-bold text-slate-900">Telemedicine Consultation Fee</td>
                   <td className="p-3">{payment.gateway}</td>
                   <td className="p-3 font-mono text-slate-500">{payment.gatewayTransactionId}</td>
-                  <td className="p-3 text-right font-black text-slate-900">₹{payment.amount.toFixed(2)} INR</td>
+                  <td className="p-3 text-right font-black text-slate-900">₹{(Number(payment?.amount) || 0).toFixed(2)} INR</td>
                 </tr>
               </tbody>
             </table>
@@ -95,7 +95,7 @@ export const PatientReceiptView: React.FC<PatientReceiptViewProps> = ({ payment 
         <div className="flex justify-end pt-2 text-right">
           <div className="space-y-1">
             <span className="text-xs font-bold text-slate-400 block">Total Amount Paid</span>
-            <span className="text-2xl font-black text-emerald-800">₹{payment.amount.toFixed(2)} INR</span>
+            <span className="text-2xl font-black text-emerald-800">₹{(Number(payment?.amount) || 0).toFixed(2)} INR</span>
           </div>
         </div>
 

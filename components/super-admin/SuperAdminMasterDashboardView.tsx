@@ -197,7 +197,7 @@ export const SuperAdminMasterDashboardView: React.FC = () => {
                   <CreditCard className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl font-black text-emerald-700">₹{metrics.totalRevenueInINR.toFixed(2)}</div>
+              <div className="text-2xl font-black text-emerald-700">₹{(Number(metrics?.totalRevenueInINR) || 0).toFixed(2)}</div>
               <p className="text-[11px] text-slate-500">
                 Fee: <strong className="text-slate-900">₹5.00 INR</strong> • {metrics.successfulPayments} Transactions
               </p>

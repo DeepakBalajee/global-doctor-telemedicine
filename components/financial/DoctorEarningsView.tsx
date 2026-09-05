@@ -71,19 +71,19 @@ export const DoctorEarningsView: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-5 border-slate-200 bg-white rounded-2xl space-y-1 shadow-xs">
             <span className="text-xs font-bold text-slate-400 block">Total Earnings</span>
-            <div className="text-2xl font-black text-slate-900">₹{summary.totalEarnings.toFixed(2)}</div>
+            <div className="text-2xl font-black text-slate-900">₹{(Number(summary?.totalEarnings) || 0).toFixed(2)}</div>
             <p className="text-[11px] text-slate-500">From {summary.completedConsultationsCount} Consultations</p>
           </Card>
 
           <Card className="p-5 border-slate-200 bg-white rounded-2xl space-y-1 shadow-xs">
             <span className="text-xs font-bold text-slate-400 block">Available Balance</span>
-            <div className="text-2xl font-black text-teal-700">₹{summary.availableBalance.toFixed(2)}</div>
+            <div className="text-2xl font-black text-teal-700">₹{(Number(summary?.availableBalance) || 0).toFixed(2)}</div>
             <p className="text-[11px] font-semibold text-emerald-600">Eligible for instant withdrawal</p>
           </Card>
 
           <Card className="p-5 border-slate-200 bg-white rounded-2xl space-y-1 shadow-xs">
             <span className="text-xs font-bold text-slate-400 block">Paid Out</span>
-            <div className="text-2xl font-black text-slate-900">₹{summary.paidOut.toFixed(2)}</div>
+            <div className="text-2xl font-black text-slate-900">₹{(Number(summary?.paidOut) || 0).toFixed(2)}</div>
             <p className="text-[11px] text-slate-500">Transferred to Bank Account</p>
           </Card>
 
@@ -118,7 +118,7 @@ export const DoctorEarningsView: React.FC = () => {
                 {payouts.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50">
                     <td className="p-3 font-mono font-bold text-slate-900">{p.id}</td>
-                    <td className="p-3 font-extrabold text-teal-800">₹{p.amount.toFixed(2)}</td>
+                    <td className="p-3 font-extrabold text-teal-800">₹{(Number(p?.amount) || 0).toFixed(2)}</td>
                     <td className="p-3 text-slate-700">{p.payoutMethod}</td>
                     <td className="p-3 font-mono text-slate-500">{p.providerReference || '—'}</td>
                     <td className="p-3">

@@ -36,7 +36,7 @@ export const DoctorPayoutModal: React.FC<DoctorPayoutModalProps> = ({
     }
 
     if (numAmount > availableBalance) {
-      setError(`Amount exceeds your available balance of ₹${availableBalance.toFixed(2)}.`)
+      setError(`Amount exceeds your available balance of ₹${(Number(availableBalance) || 0).toFixed(2)}.`)
       return
     }
 
@@ -81,7 +81,7 @@ export const DoctorPayoutModal: React.FC<DoctorPayoutModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div className="p-4 rounded-xl bg-teal-50/60 border border-teal-100 space-y-1">
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-800 block">Available for Payout</span>
-            <span className="text-xl font-black text-teal-900">₹{availableBalance.toFixed(2)} INR</span>
+            <span className="text-xl font-black text-teal-900">₹{(Number(availableBalance) || 0).toFixed(2)} INR</span>
           </div>
 
           <Input

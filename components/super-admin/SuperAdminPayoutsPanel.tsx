@@ -72,7 +72,7 @@ export const SuperAdminPayoutsPanel: React.FC = () => {
                   <tr key={p.id} className="hover:bg-slate-50">
                     <td className="p-3 font-mono font-bold text-slate-900">{p.id}</td>
                     <td className="p-3 font-semibold">{p.doctorName}</td>
-                    <td className="p-3 font-extrabold text-teal-800">₹{p.amount.toFixed(2)}</td>
+                    <td className="p-3 font-extrabold text-teal-800">₹{(Number(p?.amount) || 0).toFixed(2)}</td>
                     <td className="p-3 text-slate-700">{p.payoutMethod}</td>
                     <td className="p-3">
                       <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
