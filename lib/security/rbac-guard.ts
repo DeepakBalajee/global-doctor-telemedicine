@@ -1,0 +1,46 @@
+import { UserRole } from '@/types/auth'
+
+export type SecurityPermission =
+  | 'VIEW_MASTER_ANALYTICS'
+  | 'MANAGE_ADMIN_ACCOUNTS'
+  | 'VIEW_SUPER_ADMIN_FINANCIAL'
+  | 'APPROVE_DOCTOR_PAYOUT'
+  | 'PROCESS_PATIENT_REFUND'
+  | 'MANAGE_DOCTOR_VERIFICATION'
+  | 'VIEW_OWN_EARNINGS'
+  | 'REQUEST_OWN_PAYOUT'
+  | 'VIEW_OWN_PATIENT_RECEIPT'
+  | 'JOIN_AUTHORIZED_CONSULTATION'
+
+export const ROLE_PERMISSIONS_MATRIX: Record<UserRole, SecurityPermission[]> = {
+  [UserRole.SUPER_ADMIN]: [
+    'VIEW_MASTER_ANALYTICS',
+    'MANAGE_ADMIN_ACCOUNTS',
+    'VIEW_SUPER_ADMIN_FINANCIAL',
+    'APPROVE_DOCTOR_PAYOUT',
+    'PROCESS_PATIENT_REFUND',
+    'MANAGE_DOCTOR_VERIFICATION',
+    'VIEW_OWN_EARNINGS',
+    'REQUEST_OWN_PAYOUT',
+    'VIEW_OWN_PATIENT_RECEIPT',
+    'JOIN_AUTHORIZED_CONSULTATION',
+  ],
+  [UserRole.ADMIN]: [
+    'MANAGE_DOCTOR_VERIFICATION',
+    'VIEW_OWN_PATIENT_RECEIPT',
+  ],
+  [UserRole.DOCTOR]: [
+    'VIEW_OWN_EARNINGS',
+    'REQUEST_OWN_PAYOUT',
+    'JOIN_AUTHORIZED_CONSULTATION',
+  ],
+  [UserRole.PATIENT]: [
+    'VIEW_OWN_PATIENT_RECEIPT',
+    'JOIN_AUTHORIZED_CONSULTATION',
+  ],
+}
+
+export function isRoleAuthorizedForPermission(role: UserRole, permission: SecurityPermission): boolean {
+  const allowed = ROLE_PERMISSIONS_MATRIX[role] || []
+  return allowed.includes(permission)
+}

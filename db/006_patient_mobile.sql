@@ -1,0 +1,2 @@
+ALTER TABLE patients
+ADD COLUMN IF NOT EXISTS mobile_number VARCHAR(30);
