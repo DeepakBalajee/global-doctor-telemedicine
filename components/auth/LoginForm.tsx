@@ -45,9 +45,8 @@ export const LoginForm: React.FC = () => {
         rememberMe,
       })
 
-      if (result.status === AuthResponseStatus.SUCCESS && result.user) {
-        // Redirect based on backend authenticated user role
-        router.push('/patient')
+      if (result.success && (result.redirectUrl || result.user)) {
+        router.push(result.redirectUrl || '/patient/dashboard')
       } else {
         setErrorMessage(result.message || 'Invalid username or password.')
       }

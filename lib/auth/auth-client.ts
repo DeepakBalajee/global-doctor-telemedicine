@@ -1,38 +1,57 @@
-import { LoginCredentials, AuthResult, AuthResponseStatus } from '@/types/auth'
-import { sanitizeUsernameOrEmail, getGenericAuthErrorMessage } from './auth-utils'
+import { LoginCredentials, AuthResult, AuthResponseStatus, UserRole } from '@/types/auth'
+import { sanitizeUsernameOrEmail } from './auth-utils'
 
 /**
  * Client API abstraction for authentication (POST /api/auth/login).
- * In production, credentials are submitted via secure HTTPS POST.
- * Server manages HttpOnly + Secure cookies for authenticated sessions.
+ * Connects to server backend API verifying PostgreSQL credentials,
+ * password hash, and returning HttpOnly session cookies.
  */
 export async function loginWithCredentials(
   credentials: LoginCredentials
-): Promise<AuthResult> {
+): Promise<{ success: boolean; redirectUrl?: string; message?: string; status?: AuthResponseStatus; user?: any }> {
   const sanitizedUsernameOrEmail = sanitizeUsernameOrEmail(credentials.usernameOrEmail)
 
-  // Basic validation check before request
   if (!sanitizedUsernameOrEmail || !credentials.password) {
     return {
+      success: false,
       status: AuthResponseStatus.INVALID_CREDENTIALS,
-      message: getGenericAuthErrorMessage(AuthResponseStatus.INVALID_CREDENTIALS),
+      message: 'Please enter both username/email and password.',
     }
   }
 
   try {
-    // Simulated network delay preparing for real backend API call
-    await new Promise((resolve) => setTimeout(resolve, 800))
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        usernameOrEmail: sanitizedUsernameOrEmail,
+        password: credentials.password,
+        rememberMe: credentials.rememberMe,
+      }),
+    })
 
-    // Note: No hardcoded passwords or fake role bypasses!
-    // The backend API is responsible for verifying credentials, MFA, and returning session cookies.
+    const data = await response.json()
+
+    if (!response.ok || !data.success) {
+      return {
+        success: false,
+        status: AuthResponseStatus.INVALID_CREDENTIALS,
+        message: data.message || 'Invalid username/email or password.',
+      }
+    }
+
     return {
-      status: AuthResponseStatus.INVALID_CREDENTIALS,
-      message: getGenericAuthErrorMessage(AuthResponseStatus.INVALID_CREDENTIALS),
+      success: true,
+      status: AuthResponseStatus.SUCCESS,
+      redirectUrl: data.redirectUrl || '/patient/dashboard',
+      message: data.message,
+      user: data.user,
     }
   } catch {
     return {
+      success: false,
       status: AuthResponseStatus.SERVER_ERROR,
-      message: getGenericAuthErrorMessage(AuthResponseStatus.SERVER_ERROR),
+      message: 'Unable to connect to the server. Please try again.',
     }
   }
 }

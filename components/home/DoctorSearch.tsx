@@ -46,8 +46,8 @@ export const DoctorSearch: React.FC = () => {
         {/* Search Input */}
         <div className="md:col-span-4">
           <Input
-            label="Condition or Doctor"
-            placeholder="Search doctors, specialties, or conditions"
+            label="Doctor Name"
+            placeholder="Search doctors or specialties"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             icon={<Search className="w-4 h-4" />}

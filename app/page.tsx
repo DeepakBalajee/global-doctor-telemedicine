@@ -28,10 +28,7 @@ export default function HomePage() {
       {/* 6. DOCTOR CTA & WORKSTATION PREVIEW */}
       <DoctorCTA />
 
-      {/* 7. HEALTHCARE SECURITY & PRIVACY PRINCIPLES */}
-      <SecuritySection />
-
-      {/* 8. FINAL CALL TO ACTION */}
+      {/* 7. FINAL CALL TO ACTION */}
       <FinalCTA />
     </div>
   )

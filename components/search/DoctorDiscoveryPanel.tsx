@@ -9,11 +9,15 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { fetchDoctorSearchResults } from '@/lib/search/search-client'
 
-export const DoctorDiscoveryPanel: React.FC = () => {
+export interface DoctorDiscoveryPanelProps {
+  initialSpecialty?: string
+}
+
+export const DoctorDiscoveryPanel: React.FC<DoctorDiscoveryPanelProps> = ({ initialSpecialty }) => {
   const [params, setParams] = useState<DoctorSearchParams>({
     query: '',
     doctorType: 'ALL',
-    specialization: 'ALL',
+    specialization: initialSpecialty || 'ALL',
     location: 'ALL',
     availability: 'ALL',
     consultationType: 'ALL',

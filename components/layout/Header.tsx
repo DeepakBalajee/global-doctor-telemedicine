@@ -101,11 +101,6 @@ export const Header: React.FC = () => {
           </div>
 
           <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-2">
-            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="w-full">
-              <Button variant="outline" size="md" fullWidth>
-                Log In
-              </Button>
-            </Link>
             <Link href="/patient/register" onClick={() => setMobileMenuOpen(false)} className="w-full">
               <Button variant="primary" size="md" fullWidth>
                 Get Started
