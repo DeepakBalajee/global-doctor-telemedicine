@@ -19,7 +19,8 @@ import { PlatformSettings } from '@/types/settings'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { getPlatformSettings, updatePlatformSettings } from '@/lib/admin/admin-client'
+import { PasswordInput } from '@/components/auth/PasswordInput'
+import { getPlatformSettings, updatePlatformSettings, updateSuperAdminCredentials } from '@/lib/admin/admin-client'
 
 export const SuperAdminSettingsView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
@@ -33,6 +34,13 @@ export const SuperAdminSettingsView: React.FC = () => {
   // Maintenance Confirmation Modal
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false)
 
+  // Super Admin Credentials state
+  const [saCurrentPassword, setSaCurrentPassword] = useState('')
+  const [saNewUsername, setSaNewUsername] = useState('')
+  const [saNewEmail, setSaNewEmail] = useState('')
+  const [saNewPassword, setSaNewPassword] = useState('')
+  const [isUpdatingCreds, setIsUpdatingCreds] = useState(false)
+
   const loadSettings = async () => {
     setIsLoading(true)
     const res = await getPlatformSettings()
@@ -43,6 +51,35 @@ export const SuperAdminSettingsView: React.FC = () => {
   useEffect(() => {
     loadSettings()
   }, [])
+
+  const handleUpdateSuperAdminCredentials = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!saCurrentPassword) {
+      setMessage({ type: 'error', text: 'Current password is required to authorize credentials change.' })
+      return
+    }
+    setMessage(null)
+    setIsUpdatingCreds(true)
+
+    const res = await updateSuperAdminCredentials({
+      currentPassword: saCurrentPassword,
+      newUsername: saNewUsername || undefined,
+      newEmail: saNewEmail || undefined,
+      newPassword: saNewPassword || undefined,
+    })
+
+    if (res.success) {
+      setMessage({ type: 'success', text: res.message || 'Super Admin credentials updated successfully.' })
+      setSaCurrentPassword('')
+      setSaNewUsername('')
+      setSaNewEmail('')
+      setSaNewPassword('')
+    } else {
+      setMessage({ type: 'error', text: res.message || 'Failed to update credentials.' })
+    }
+
+    setIsUpdatingCreds(false)
+  }
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -310,37 +347,101 @@ export const SuperAdminSettingsView: React.FC = () => {
 
         {/* TAB 4: AUTHENTICATION & SECURITY */}
         {activeTab === 'security' && (
-          <Card className="p-6 border-slate-200 bg-white rounded-2xl space-y-6">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
-              <Lock className="w-4 h-4 text-amber-600" /> Authentication Policies & Thresholds
-            </h3>
+          <div className="space-y-6">
+            {/* SUPER ADMIN CREDENTIALS CHANGE */}
+            <Card className="p-6 border-slate-200 bg-white rounded-2xl space-y-5">
+              <div className="border-b border-slate-100 pb-3 space-y-1">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-amber-600" /> Super Admin Credentials (Username & Password)
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Update the master Super Admin account username, email, and password. Scrypt hashing enforced in PostgreSQL.
+                </p>
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-              <Input
-                label="Minimum Password Length *"
-                type="number"
-                value={settings.minPasswordLength}
-                onChange={(e) => setSettings({ ...settings, minPasswordLength: Number(e.target.value) })}
-                required
-              />
+              <form onSubmit={handleUpdateSuperAdminCredentials} className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label="New Username (Optional)"
+                    placeholder="e.g. master_superadmin"
+                    value={saNewUsername}
+                    onChange={(e) => setSaNewUsername(e.target.value)}
+                    autoComplete="off"
+                  />
 
-              <Input
-                label="Session Timeout (Minutes) *"
-                type="number"
-                value={settings.sessionTimeoutMinutes}
-                onChange={(e) => setSettings({ ...settings, sessionTimeoutMinutes: Number(e.target.value) })}
-                required
-              />
+                  <Input
+                    label="New Email Address (Optional)"
+                    type="email"
+                    placeholder="e.g. superadmin@globaltelemed.org"
+                    value={saNewEmail}
+                    onChange={(e) => setSaNewEmail(e.target.value)}
+                    autoComplete="off"
+                  />
 
-              <Input
-                label="Rate Limit Threshold (Req/Min) *"
-                type="number"
-                value={settings.rateLimitRequestsPerMin}
-                onChange={(e) => setSettings({ ...settings, rateLimitRequestsPerMin: Number(e.target.value) })}
-                required
-              />
-            </div>
-          </Card>
+                  <PasswordInput
+                    label="Current Password *"
+                    placeholder="Enter current password to authorize"
+                    value={saCurrentPassword}
+                    onChange={(e) => setSaCurrentPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                  />
+
+                  <PasswordInput
+                    label="New Password (Optional)"
+                    placeholder="Min 8 characters"
+                    value={saNewPassword}
+                    onChange={(e) => setSaNewPassword(e.target.value)}
+                    autoComplete="new-password"
+                  />
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="md"
+                    disabled={isUpdatingCreds}
+                    className="font-bold text-xs gap-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20"
+                  >
+                    <Save className="w-4 h-4" /> {isUpdatingCreds ? 'Updating Credentials...' : 'Update Super Admin Credentials'}
+                  </Button>
+                </div>
+              </form>
+            </Card>
+
+            <Card className="p-6 border-slate-200 bg-white rounded-2xl space-y-6">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+                <Lock className="w-4 h-4 text-amber-600" /> Authentication Policies & Thresholds
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <Input
+                  label="Minimum Password Length *"
+                  type="number"
+                  value={settings.minPasswordLength}
+                  onChange={(e) => setSettings({ ...settings, minPasswordLength: Number(e.target.value) })}
+                  required
+                />
+
+                <Input
+                  label="Session Timeout (Minutes) *"
+                  type="number"
+                  value={settings.sessionTimeoutMinutes}
+                  onChange={(e) => setSettings({ ...settings, sessionTimeoutMinutes: Number(e.target.value) })}
+                  required
+                />
+
+                <Input
+                  label="Rate Limit Threshold (Req/Min) *"
+                  type="number"
+                  value={settings.rateLimitRequestsPerMin}
+                  onChange={(e) => setSettings({ ...settings, rateLimitRequestsPerMin: Number(e.target.value) })}
+                  required
+                />
+              </div>
+            </Card>
+          </div>
         )}
 
         {/* TAB 5: PAYMENT GATEWAY */}

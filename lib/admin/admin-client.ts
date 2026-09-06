@@ -340,6 +340,29 @@ export async function changeSuperAdminPassword(payload: {
 }
 
 /**
+ * Super Admin: Update Credentials Username & Password (PATCH /api/super-admin/credentials).
+ */
+export async function updateSuperAdminCredentials(payload: {
+  currentPassword: string
+  newUsername?: string
+  newEmail?: string
+  newPassword?: string
+}): Promise<{ success: boolean; message?: string; newUsername?: string }> {
+  try {
+    const response = await fetch('/api/super-admin/credentials', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const data = await response.json()
+    if (!response.ok) return { success: false, message: data.error || 'Credentials update failed.' }
+    return { success: true, message: data.message, newUsername: data.newUsername }
+  } catch {
+    return { success: false, message: 'Server connection error.' }
+  }
+}
+
+/**
  * Super Admin: Fetch System Health Status (GET /api/super-admin/system-health).
  */
 export async function getSystemHealth(): Promise<SystemHealthStatus[]> {
