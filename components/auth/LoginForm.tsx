@@ -74,7 +74,7 @@ export const LoginForm: React.FC = () => {
       <AuthError message={errorMessage || undefined} />
 
       {/* FORM */}
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-label="Sign in form">
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate autoComplete="off" aria-label="Sign in form">
         
         {/* USERNAME OR EMAIL */}
         <Input

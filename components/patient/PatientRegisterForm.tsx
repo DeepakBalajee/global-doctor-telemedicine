@@ -133,7 +133,7 @@ export const PatientRegisterForm: React.FC = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-label="Patient registration form">
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate autoComplete="off" aria-label="Patient registration form">
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
@@ -144,6 +144,7 @@ export const PatientRegisterForm: React.FC = () => {
               onChange={(e) => setFullName(e.target.value)}
               required
               disabled={isLoading}
+              autoComplete="off"
               icon={<User className="w-4 h-4" />}
             />
           </div>
@@ -156,6 +157,7 @@ export const PatientRegisterForm: React.FC = () => {
               onChange={(e) => setUsername(e.target.value)}
               required
               disabled={isLoading}
+              autoComplete="off"
               icon={<User className="w-4 h-4" />}
             />
           </div>
@@ -169,6 +171,7 @@ export const PatientRegisterForm: React.FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={isLoading}
+              autoComplete="off"
               icon={<Mail className="w-4 h-4" />}
             />
           </div>
@@ -181,6 +184,7 @@ export const PatientRegisterForm: React.FC = () => {
               onChange={(e) => setMobileNumber(e.target.value)}
               required
               disabled={isLoading}
+              autoComplete="off"
               icon={<Phone className="w-4 h-4" />}
             />
           </div>
@@ -193,6 +197,7 @@ export const PatientRegisterForm: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={isLoading}
+              autoComplete="new-password"
             />
           </div>
 
@@ -204,6 +209,7 @@ export const PatientRegisterForm: React.FC = () => {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               disabled={isLoading}
+              autoComplete="new-password"
             />
           </div>
 
