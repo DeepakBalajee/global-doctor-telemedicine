@@ -106,6 +106,18 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24 * 7,
     })
 
+    if (role === UserRole.SUPER_ADMIN) {
+      response.cookies.set({
+        name: 'telemed_super_admin_session',
+        value: sessionToken,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7,
+      })
+    }
+
     return response
   } catch (error) {
     console.error('UNIFIED LOGIN ERROR:', error)

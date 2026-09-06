@@ -110,6 +110,16 @@ export async function POST(request: Request) {
       maxAge: 43200,
     })
 
+    response.cookies.set({
+      name: 'telemed_superadmin_session',
+      value: sessionToken,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 43200,
+    })
+
     return response
   } catch (err) {
     console.error('SUPER ADMIN LOGIN ERROR:', err)

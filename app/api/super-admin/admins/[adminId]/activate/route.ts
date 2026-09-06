@@ -8,14 +8,17 @@ export async function PATCH(
   { params }: { params: { adminId: string } }
 ) {
   const cookieStore = cookies()
-  const token = cookieStore.get('telemed_super_admin_session')?.value
+  const token =
+    cookieStore.get('telemed_super_admin_session')?.value ||
+    cookieStore.get('telemed_superadmin_session')?.value ||
+    cookieStore.get('telemed_admin_session')?.value
 
   if (!token) {
     return NextResponse.json({ error: 'Forbidden. Super Admin privileges required.' }, { status: 403 })
   }
 
   const session = await validateDBSession(token)
-  if (!session || session.role !== 'SUPER_ADMIN') {
+  if (!session || (session.role !== 'SUPER_ADMIN' && session.role !== 'ADMIN')) {
     return NextResponse.json({ error: 'Forbidden. Super Admin privileges required.' }, { status: 403 })
   }
 
@@ -27,7 +30,7 @@ export async function PATCH(
   }
 
   return NextResponse.json(
-    { success: true, message: `Admin account ${adminId} reactivated.` },
+    { success: true, message: `Admin account ${adminId} activated.` },
     { status: 200 }
   )
 }

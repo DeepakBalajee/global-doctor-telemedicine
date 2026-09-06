@@ -123,8 +123,14 @@ export const SuperAdminPatientsPanel: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <span className="font-extrabold text-slate-900 text-sm">{pat.fullName}</span>
                       <span className="font-mono text-slate-400 text-[10px]">ID: {pat.id}</span>
-                      <span className="text-[10px] font-bold uppercase bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded-md">
-                        ACTIVE
+                      <span
+                        className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${
+                          pat.isSuspended || pat.isActive === false
+                            ? 'bg-red-100 text-red-900'
+                            : 'bg-emerald-100 text-emerald-900'
+                        }`}
+                      >
+                        {pat.isSuspended || pat.isActive === false ? 'SUSPENDED' : 'ACTIVE'}
                       </span>
                     </div>
 
@@ -138,14 +144,25 @@ export const SuperAdminPatientsPanel: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-end gap-2 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSuspend(pat.id)}
-                    className="text-xs font-semibold text-red-600 hover:bg-red-50 border-red-200 gap-1"
-                  >
-                    <UserX className="w-3.5 h-3.5" /> Suspend
-                  </Button>
+                  {pat.isSuspended || pat.isActive === false ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleActivate(pat.id)}
+                      className="text-xs font-semibold text-emerald-700 hover:bg-emerald-50 border-emerald-200 gap-1"
+                    >
+                      <UserCheck className="w-3.5 h-3.5" /> Activate
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSuspend(pat.id)}
+                      className="text-xs font-semibold text-red-600 hover:bg-red-50 border-red-200 gap-1"
+                    >
+                      <UserX className="w-3.5 h-3.5" /> Suspend
+                    </Button>
+                  )}
                 </div>
 
               </div>

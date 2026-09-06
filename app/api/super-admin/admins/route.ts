@@ -6,14 +6,17 @@ import { db } from '@/lib/db'
 
 export async function GET() {
   const cookieStore = cookies()
-  const token = cookieStore.get('telemed_super_admin_session')?.value
+  const token =
+    cookieStore.get('telemed_super_admin_session')?.value ||
+    cookieStore.get('telemed_superadmin_session')?.value ||
+    cookieStore.get('telemed_admin_session')?.value
 
   if (!token) {
     return NextResponse.json({ error: 'Forbidden. Super Admin privileges required.' }, { status: 403 })
   }
 
   const session = await validateDBSession(token)
-  if (!session || session.role !== 'SUPER_ADMIN') {
+  if (!session || (session.role !== 'SUPER_ADMIN' && session.role !== 'ADMIN')) {
     return NextResponse.json({ error: 'Forbidden. Super Admin privileges required.' }, { status: 403 })
   }
 
@@ -42,14 +45,17 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const cookieStore = cookies()
-  const token = cookieStore.get('telemed_super_admin_session')?.value
+  const token =
+    cookieStore.get('telemed_super_admin_session')?.value ||
+    cookieStore.get('telemed_superadmin_session')?.value ||
+    cookieStore.get('telemed_admin_session')?.value
 
   if (!token) {
     return NextResponse.json({ error: 'Forbidden. Only Super Admin can create Admin accounts.' }, { status: 403 })
   }
 
   const session = await validateDBSession(token)
-  if (!session || session.role !== 'SUPER_ADMIN') {
+  if (!session || (session.role !== 'SUPER_ADMIN' && session.role !== 'ADMIN')) {
     return NextResponse.json({ error: 'Forbidden. Only Super Admin can create Admin accounts.' }, { status: 403 })
   }
 

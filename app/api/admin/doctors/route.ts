@@ -1,93 +1,51 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { DoctorProfile } from '@/types/doctor'
-
-// Simulated complete platform doctor directory including pending verification doctors
-const adminDoctorsList: DoctorProfile[] = [
-  {
-    id: 'DOC-101',
-    userId: 'USR-DOC-101',
-    fullName: 'Dr. Sarah Jenkins',
-    username: 'dr_jenkins',
-    email: 'sarah.jenkins@globaltelemed.org',
-    mobileNumber: '+91 98765 43210',
-    doctorType: 'SPECIALIST',
-    specialtyId: 'cardiology',
-    specialtyName: 'Cardiology',
-    medicalQualification: 'MD, FACC',
-    experienceYears: 12,
-    licenseNumber: 'MCI-889012',
-    licensingAuthority: 'Medical Council of India',
-    bio: 'Senior Cardiologist specializing in preventive heart health.',
-    languages: ['en', 'hi'],
-    consultationModes: ['ONLINE_VIDEO', 'ONLINE_AUDIO'],
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    country: 'India',
-    verificationStatus: 'VERIFIED',
-    accountStatus: 'ACTIVE',
-    createdAt: new Date(Date.now() - 864000000).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'DOC-102',
-    userId: 'USR-DOC-102',
-    fullName: 'Dr. Rajesh Kumar',
-    username: 'dr_rajesh',
-    email: 'rajesh.kumar@globaltelemed.org',
-    mobileNumber: '+91 98111 22233',
-    doctorType: 'GENERAL_PHYSICIAN',
-    specialtyName: 'General Medicine',
-    medicalQualification: 'MBBS, MD',
-    experienceYears: 15,
-    licenseNumber: 'MCI-554190',
-    licensingAuthority: 'Delhi Medical Council',
-    bio: 'Experienced General Physician providing comprehensive primary healthcare.',
-    languages: ['en', 'hi', 'ta'],
-    consultationModes: ['ONLINE_VIDEO', 'ONLINE_AUDIO', 'OFFLINE'],
-    city: 'Delhi',
-    state: 'Delhi',
-    country: 'India',
-    verificationStatus: 'VERIFIED',
-    accountStatus: 'ACTIVE',
-    createdAt: new Date(Date.now() - 432000000).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'DOC-104',
-    userId: 'USR-DOC-104',
-    fullName: 'Dr. Vikramaditya Singh',
-    username: 'dr_vikram',
-    email: 'vikram.singh@globaltelemed.org',
-    mobileNumber: '+91 98999 00011',
-    doctorType: 'SPECIALIST',
-    specialtyId: 'neurology',
-    specialtyName: 'Neurology',
-    medicalQualification: 'DM (Neurology), MD',
-    experienceYears: 8,
-    licenseNumber: 'UPMC-99120',
-    licensingAuthority: 'UP Medical Council',
-    bio: 'Consultant Neurologist undergoing credential verification.',
-    languages: ['en', 'hi'],
-    consultationModes: ['ONLINE_VIDEO'],
-    city: 'Lucknow',
-    state: 'Uttar Pradesh',
-    country: 'India',
-    verificationStatus: 'PENDING',
-    accountStatus: 'ACTIVE',
-    createdAt: new Date(Date.now() - 36000000).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-]
+import { db } from '@/lib/db'
 
 export async function GET() {
   const cookieStore = cookies()
-  const adminCookie = cookieStore.get('telemed_admin_session')
-  const superAdminCookie = cookieStore.get('telemed_super_admin_session')
+  const token =
+    cookieStore.get('telemed_super_admin_session')?.value ||
+    cookieStore.get('telemed_superadmin_session')?.value ||
+    cookieStore.get('telemed_admin_session')?.value
 
-  if (!adminCookie && !superAdminCookie) {
+  if (!token) {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
   }
 
-  return NextResponse.json(adminDoctorsList, { status: 200 })
+  try {
+    const res = await db.query(`
+      SELECT 
+        d.id,
+        d.user_id AS "userId",
+        d.full_name AS "fullName",
+        d.username,
+        d.email,
+        d.mobile_number AS "mobileNumber",
+        d.doctor_type AS "doctorType",
+        d.specialty_id AS "specialtyId",
+        d.specialty_name AS "specialtyName",
+        d.medical_qualification AS "medicalQualification",
+        d.experience_years AS "experienceYears",
+        d.license_number AS "licenseNumber",
+        d.licensing_authority AS "licensingAuthority",
+        d.bio,
+        d.languages,
+        d.consultation_modes AS "consultationModes",
+        d.city,
+        d.state,
+        d.country,
+        d.verification_status AS "verificationStatus",
+        d.account_status AS "accountStatus",
+        d.created_at AS "createdAt",
+        d.updated_at AS "updatedAt"
+      FROM doctors d
+      ORDER BY d.created_at DESC
+    `)
+
+    return NextResponse.json(res.rows, { status: 200 })
+  } catch (err) {
+    console.error('Fetch doctors error:', err)
+    return NextResponse.json([], { status: 200 })
+  }
 }

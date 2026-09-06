@@ -14,6 +14,8 @@ export interface PatientProfile {
   city: string
   town?: string
   village?: string
+  isActive?: boolean
+  isSuspended?: boolean
   createdAt: string
   updatedAt: string
 }

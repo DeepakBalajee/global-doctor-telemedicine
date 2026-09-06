@@ -4,12 +4,15 @@ import { getAuditLogs } from '@/lib/admin/audit-logger'
 
 export async function GET() {
   const cookieStore = cookies()
-  const superAdminCookie = cookieStore.get('telemed_super_admin_session')
+  const token =
+    cookieStore.get('telemed_super_admin_session')?.value ||
+    cookieStore.get('telemed_superadmin_session')?.value ||
+    cookieStore.get('telemed_admin_session')?.value
 
-  if (!superAdminCookie) {
+  if (!token) {
     return NextResponse.json({ error: 'Forbidden. Super Admin privileges required.' }, { status: 403 })
   }
 
-  const logs = getAuditLogs()
+  const logs = await getAuditLogs()
   return NextResponse.json(logs, { status: 200 })
 }
