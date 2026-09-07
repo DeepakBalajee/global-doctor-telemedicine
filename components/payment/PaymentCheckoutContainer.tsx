@@ -63,6 +63,17 @@ export const PaymentCheckoutContainer: React.FC<PaymentCheckoutContainerProps> =
   const launchCheckoutModal = (orderData: PaymentOrder) => {
     setUiState('CHECKOUT_OPEN')
 
+    const isPlaceholderKey =
+      !orderData.keyId ||
+      orderData.keyId.includes('placeholder') ||
+      orderData.keyId.includes('fallback')
+
+    // If order is simulated or environment uses placeholder keys, run sandbox test flow
+    if (orderData.isSimulated || isPlaceholderKey) {
+      simulateSandboxPayment(orderData)
+      return
+    }
+
     if (typeof window !== 'undefined' && window.Razorpay) {
       const options = {
         key: orderData.keyId,

@@ -24,6 +24,7 @@ export interface PaymentOrder {
   keyId: string // Public key exposed for checkout SDK
   createdAt: string
   expiresAt?: string
+  isSimulated?: boolean
 }
 
 export interface PaymentVerificationRequest {

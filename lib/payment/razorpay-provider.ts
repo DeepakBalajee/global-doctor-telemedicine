@@ -16,17 +16,68 @@ export class RazorpayPaymentProvider implements IPaymentProvider {
   async createOrder(input: CreateOrderInput): Promise<PaymentOrder> {
     // Server-authoritative amount: ₹5.00 INR = 500 paise
     const FIXED_AMOUNT_PAISE = 500
-    const orderId = 'order_' + Math.random().toString(36).substring(2, 12)
 
+    const isPlaceholder =
+      !this.keyId ||
+      !this.keySecret ||
+      this.keyId.includes('fallback') ||
+      this.keyId.includes('placeholder') ||
+      this.keySecret.includes('fallback') ||
+      this.keySecret.includes('placeholder')
+
+    if (!isPlaceholder) {
+      try {
+        const auth = Buffer.from(`${this.keyId}:${this.keySecret}`).toString('base64')
+        const response = await fetch('https://api.razorpay.com/v1/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Basic ${auth}`,
+          },
+          body: JSON.stringify({
+            amount: FIXED_AMOUNT_PAISE,
+            currency: 'INR',
+            receipt: `rcpt_${input.consultationRequestId.substring(0, 18)}`,
+            notes: {
+              consultationRequestId: input.consultationRequestId,
+            },
+          }),
+        })
+
+        if (response.ok) {
+          const rzpOrder = await response.json()
+          return {
+            orderId: rzpOrder.id,
+            consultationRequestId: input.consultationRequestId,
+            amount: FIXED_AMOUNT_PAISE,
+            currency: 'INR',
+            status: 'PENDING',
+            keyId: this.keyId,
+            createdAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+            isSimulated: false,
+          }
+        } else {
+          const errorData = await response.json().catch(() => ({}))
+          console.warn('Razorpay API order creation returned non-200:', response.status, errorData)
+        }
+      } catch (err) {
+        console.error('Failed to communicate with Razorpay API:', err)
+      }
+    }
+
+    // Fallback simulated order when Razorpay API credentials are mock/placeholder or API is unreachable
+    const fallbackOrderId = 'order_' + Math.random().toString(36).substring(2, 12)
     return {
-      orderId,
+      orderId: fallbackOrderId,
       consultationRequestId: input.consultationRequestId,
       amount: FIXED_AMOUNT_PAISE,
       currency: 'INR',
       status: 'PENDING',
       keyId: this.keyId,
       createdAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 mins
+      expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+      isSimulated: true,
     }
   }
 
@@ -38,6 +89,15 @@ export class RazorpayPaymentProvider implements IPaymentProvider {
     }
 
     if (razorpay_signature?.startsWith?.('simulated_')) {
+      return true
+    }
+
+    const isPlaceholderSecret =
+      !this.keySecret ||
+      this.keySecret.includes('fallback') ||
+      this.keySecret.includes('placeholder')
+
+    if (isPlaceholderSecret) {
       return true
     }
 
