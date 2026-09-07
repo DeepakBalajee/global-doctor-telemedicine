@@ -43,7 +43,7 @@ export async function GET(request: Request) {
       email: 'rajesh.kumar@globaltelemed.org',
       mobileNumber: '+91 98111 22233',
       doctorType: 'GENERAL_PHYSICIAN',
-      specialtyName: 'General Medicine',
+      specialtyName: 'General (MBBS)',
       medicalQualification: 'MBBS, MD',
       experienceYears: 15,
       licenseNumber: 'MCI-554190',

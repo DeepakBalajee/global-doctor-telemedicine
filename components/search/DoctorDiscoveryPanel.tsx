@@ -81,7 +81,7 @@ export const DoctorDiscoveryPanel: React.FC<DoctorDiscoveryPanelProps> = ({ init
           <Input
             value={params.query || ''}
             onChange={(e) => setParams({ ...params, query: e.target.value })}
-            placeholder="Search by doctor name, specialty (Cardiology, General Medicine)..."
+            placeholder="Search by doctor name, specialty (Cardiology, General (MBBS))..."
             className="pl-11 pr-4 py-3.5 text-sm rounded-2xl border-slate-300 shadow-lg focus:ring-2 focus:ring-teal-500"
           />
           <Search className="w-5 h-5 text-slate-400 absolute left-4 top-6" />
@@ -138,16 +138,13 @@ export const DoctorDiscoveryPanel: React.FC<DoctorDiscoveryPanelProps> = ({ init
           {/* LOCATION */}
           <div className="space-y-1">
             <label className="font-bold text-slate-700">Location</label>
-            <select
-              value={params.location || 'ALL'}
-              onChange={(e) => setParams({ ...params, location: e.target.value })}
-              className="w-full rounded-xl border border-slate-200 p-2.5 bg-white font-medium focus:ring-2 focus:ring-teal-500 focus:outline-none"
-            >
-              <option value="ALL">All Locations</option>
-              {data?.locations?.map((loc) => (
-                <option key={loc} value={loc}>{loc}</option>
-              ))}
-            </select>
+            <input
+              type="text"
+              placeholder="Enter city or location..."
+              value={params.location === 'ALL' ? '' : params.location || ''}
+              onChange={(e) => setParams({ ...params, location: e.target.value || 'ALL' })}
+              className="w-full rounded-xl border border-slate-200 p-2.5 bg-white font-medium focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder:text-slate-400"
+            />
           </div>
 
           {/* AVAILABILITY */}

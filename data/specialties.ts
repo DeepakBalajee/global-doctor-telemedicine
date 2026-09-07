@@ -3,7 +3,7 @@ import { Specialty } from '@/types/specialty'
 export const SPECIALTIES_DATA: Specialty[] = [
   {
     id: 'general-medicine',
-    name: 'General Medicine',
+    name: 'General (MBBS)',
     slug: 'general-medicine',
     description: 'Comprehensive primary healthcare, routine checkups, and chronic condition management.',
     iconName: 'Stethoscope',
