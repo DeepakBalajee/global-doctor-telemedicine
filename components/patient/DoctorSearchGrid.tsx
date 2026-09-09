@@ -41,7 +41,7 @@ export const DoctorSearchGrid: React.FC = () => {
 
   const categoryOptions = [
     { value: '', label: 'All Doctor Categories' },
-    { value: 'GENERAL_PHYSICIAN', label: 'General Physician' },
+    { value: 'GENERAL_PHYSICIAN', label: 'General (MBBS)' },
     { value: 'SPECIALIST', label: 'Specialist' },
   ]
 
@@ -112,7 +112,7 @@ export const DoctorSearchGrid: React.FC = () => {
                 <div>
                   <h3 className="text-base font-extrabold text-slate-900">{doc.fullName}</h3>
                   <p className="text-xs font-semibold text-teal-700">
-                    {doc.doctorType === 'SPECIALIST' ? `Specialist in ${doc.specialtyName}` : 'General Physician'}
+                    {doc.doctorType === 'SPECIALIST' ? `Specialist in ${doc.specialtyName}` : 'General (MBBS)'}
                   </p>
                   <p className="text-[11px] text-slate-500 font-medium pt-0.5">
                     {doc.medicalQualification} • {doc.experienceYears} Years Exp

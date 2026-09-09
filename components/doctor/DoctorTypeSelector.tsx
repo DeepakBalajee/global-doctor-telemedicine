@@ -66,7 +66,7 @@ export const DoctorTypeSelector: React.FC<DoctorTypeSelectorProps> = ({
 
           <div className="space-y-1 min-w-0 flex-1">
             <div className="flex items-center justify-between">
-              <span className="text-base font-bold">General Physician</span>
+              <span className="text-base font-bold">General (MBBS)</span>
               {doctorType === 'GENERAL_PHYSICIAN' && (
                 <CheckCircle2 className="w-5 h-5 text-brand-600" />
               )}

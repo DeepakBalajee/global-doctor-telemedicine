@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { fetchDoctorSearchResults } from '@/lib/search/search-client'
+import { SPECIALTIES_DATA } from '@/data/specialties'
 
 export interface DoctorDiscoveryPanelProps {
   initialSpecialty?: string
@@ -28,6 +29,13 @@ export const DoctorDiscoveryPanel: React.FC<DoctorDiscoveryPanelProps> = ({ init
   const [data, setData] = useState<DoctorSearchResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [debouncedQuery, setDebouncedQuery] = useState('')
+
+  const availableSpecializations = Array.from(
+    new Set([
+      ...SPECIALTIES_DATA.map((s) => s.name),
+      ...(data?.specializations || []),
+    ])
+  )
 
   // 300ms Debounce Handler for Query Keystrokes
   useEffect(() => {
@@ -115,7 +123,7 @@ export const DoctorDiscoveryPanel: React.FC<DoctorDiscoveryPanelProps> = ({ init
               className="w-full rounded-xl border border-slate-200 p-2.5 bg-white font-medium focus:ring-2 focus:ring-teal-500 focus:outline-none"
             >
               <option value="ALL">All Doctor Types</option>
-              <option value="GENERAL">General Physician</option>
+              <option value="GENERAL">General (MBBS)</option>
               <option value="SPECIALIST">Specialist Doctor</option>
             </select>
           </div>
@@ -129,7 +137,7 @@ export const DoctorDiscoveryPanel: React.FC<DoctorDiscoveryPanelProps> = ({ init
               className="w-full rounded-xl border border-slate-200 p-2.5 bg-white font-medium focus:ring-2 focus:ring-teal-500 focus:outline-none"
             >
               <option value="ALL">All Specializations</option>
-              {data?.specializations?.map((spec) => (
+              {availableSpecializations.map((spec) => (
                 <option key={spec} value={spec}>{spec}</option>
               ))}
             </select>
