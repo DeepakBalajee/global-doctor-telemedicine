@@ -10,51 +10,99 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { usernameOrEmail, password } = body
+    const { usernameOrEmail, password, isOtpLogin, mobileNumber, otpCode } = body
 
-    if (!usernameOrEmail?.trim() || !password) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid username/email or password.' },
-        { status: 400 }
+    let user: any = null
+
+    if (isOtpLogin) {
+      if (!mobileNumber?.trim() || !otpCode?.trim()) {
+        return NextResponse.json(
+          { success: false, message: 'Please enter both mobile number and 6-digit OTP code.' },
+          { status: 400 }
+        )
+      }
+
+      // Verify OTP against PostgreSQL
+      const verifyRes = await fetch(`${new URL(request.url).origin}/api/auth/otp/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobileNumber, otpCode, role: 'PATIENT' }),
+      })
+
+      const verifyData = await verifyRes.json()
+      if (!verifyRes.ok || !verifyData.success) {
+        return NextResponse.json(
+          { success: false, message: verifyData.error || verifyData.message || 'Invalid or expired OTP code.' },
+          { status: 401 }
+        )
+      }
+
+      const cleanMobile = mobileNumber.trim().replace(/\s+/g, '')
+      const userRes = await db.query(
+        `
+        SELECT u.id, u.username, u.email, u.password_hash, u.role, u.is_active, p.id AS patient_id
+        FROM users u
+        JOIN patients p ON p.user_id = u.id
+        WHERE REPLACE(p.mobile_number, ' ', '') LIKE $1
+          AND u.role = 'PATIENT'
+        LIMIT 1
+        `,
+        [`%${cleanMobile}%`]
       )
-    }
 
-    const cleanInput = usernameOrEmail.trim().toLowerCase()
+      if (userRes.rows.length === 0) {
+        return NextResponse.json(
+          { success: false, message: 'No patient account registered with this phone number.' },
+          { status: 404 }
+        )
+      }
 
-    const userRes = await db.query(
-      `
-      SELECT u.id, u.username, u.email, u.password_hash, u.role, u.is_active, p.id AS patient_id
-      FROM users u
-      LEFT JOIN patients p ON p.user_id = u.id
-      WHERE (LOWER(u.username) = $1 OR LOWER(u.email) = $1)
-        AND u.role = 'PATIENT'
-      LIMIT 1
-      `,
-      [cleanInput]
-    )
+      user = userRes.rows[0]
+    } else {
+      if (!usernameOrEmail?.trim() || !password) {
+        return NextResponse.json(
+          { success: false, message: 'Invalid username/email or password.' },
+          { status: 400 }
+        )
+      }
 
-    if (userRes.rows.length === 0) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid username/email or password.' },
-        { status: 401 }
+      const cleanInput = usernameOrEmail.trim().toLowerCase()
+
+      const userRes = await db.query(
+        `
+        SELECT u.id, u.username, u.email, u.password_hash, u.role, u.is_active, p.id AS patient_id
+        FROM users u
+        LEFT JOIN patients p ON p.user_id = u.id
+        WHERE (LOWER(u.username) = $1 OR LOWER(u.email) = $1)
+          AND u.role = 'PATIENT'
+        LIMIT 1
+        `,
+        [cleanInput]
       )
-    }
 
-    const user = userRes.rows[0]
+      if (userRes.rows.length === 0) {
+        return NextResponse.json(
+          { success: false, message: 'Invalid username/email or password.' },
+          { status: 401 }
+        )
+      }
+
+      user = userRes.rows[0]
+
+      const isValidPassword = await verifyPassword(password, user.password_hash)
+
+      if (!isValidPassword) {
+        return NextResponse.json(
+          { success: false, message: 'Invalid username/email or password.' },
+          { status: 401 }
+        )
+      }
+    }
 
     if (!user.is_active) {
       return NextResponse.json(
         { success: false, message: 'Account is suspended or inactive.' },
         { status: 403 }
-      )
-    }
-
-    const isValidPassword = await verifyPassword(password, user.password_hash)
-
-    if (!isValidPassword) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid username/email or password.' },
-        { status: 401 }
       )
     }
 

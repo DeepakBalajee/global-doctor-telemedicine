@@ -11,74 +11,151 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { usernameOrEmail, password } = body
+    const { usernameOrEmail, password, isOtpLogin, mobileNumber, otpCode } = body
 
-    if (!usernameOrEmail?.trim() || !password) {
-      const errorResult: DoctorAuthResult = {
-        status: 'INVALID_CREDENTIALS',
-        message: 'Invalid username/email or password.',
+    let row: any = null
+
+    if (isOtpLogin) {
+      if (!mobileNumber?.trim() || !otpCode?.trim()) {
+        const errorResult: DoctorAuthResult = {
+          status: 'INVALID_CREDENTIALS',
+          message: 'Please enter both mobile number and 6-digit OTP code.',
+        }
+        return NextResponse.json(errorResult, { status: 400 })
       }
-      return NextResponse.json(errorResult, { status: 400 })
-    }
 
-    const cleanInput = usernameOrEmail.trim().toLowerCase()
+      // Verify OTP against PostgreSQL
+      const verifyRes = await fetch(`${new URL(request.url).origin}/api/auth/otp/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobileNumber, otpCode, role: 'DOCTOR' }),
+      })
 
-    const userRes = await db.query(
-      `
-      SELECT 
-        u.id AS user_id,
-        u.username,
-        u.email,
-        u.password_hash,
-        u.role,
-        u.is_active,
-        d.id AS doctor_id,
-        d.full_name,
-        d.mobile_number,
-        d.doctor_type,
-        d.specialty_id,
-        d.specialty_name,
-        d.medical_qualification,
-        d.experience_years,
-        d.license_number,
-        d.licensing_authority,
-        d.bio,
-        d.languages,
-        d.consultation_modes,
-        d.city,
-        d.state,
-        d.country,
-        d.verification_status,
-        d.account_status,
-        d.created_at,
-        d.updated_at
-      FROM users u
-      JOIN doctors d ON d.user_id = u.id
-      WHERE (LOWER(u.username) = $1 OR LOWER(u.email) = $1)
-        AND u.role = 'DOCTOR'
-      LIMIT 1
-      `,
-      [cleanInput]
-    )
-
-    if (userRes.rows.length === 0) {
-      const invalidResult: DoctorAuthResult = {
-        status: 'INVALID_CREDENTIALS',
-        message: 'Invalid username/email or password.',
+      const verifyData = await verifyRes.json()
+      if (!verifyRes.ok || !verifyData.success) {
+        const errorResult: DoctorAuthResult = {
+          status: 'INVALID_CREDENTIALS',
+          message: verifyData.error || verifyData.message || 'Invalid or expired OTP code.',
+        }
+        return NextResponse.json(errorResult, { status: 401 })
       }
-      return NextResponse.json(invalidResult, { status: 401 })
-    }
 
-    const row = userRes.rows[0]
+      const cleanMobile = mobileNumber.trim().replace(/\s+/g, '')
+      const userRes = await db.query(
+        `
+        SELECT 
+          u.id AS user_id,
+          u.username,
+          u.email,
+          u.password_hash,
+          u.role,
+          u.is_active,
+          d.id AS doctor_id,
+          d.full_name,
+          d.mobile_number,
+          d.doctor_type,
+          d.specialty_id,
+          d.specialty_name,
+          d.medical_qualification,
+          d.experience_years,
+          d.license_number,
+          d.licensing_authority,
+          d.bio,
+          d.languages,
+          d.consultation_modes,
+          d.city,
+          d.state,
+          d.country,
+          d.verification_status,
+          d.account_status,
+          d.created_at,
+          d.updated_at
+        FROM users u
+        JOIN doctors d ON d.user_id = u.id
+        WHERE REPLACE(d.mobile_number, ' ', '') LIKE $1
+          AND u.role = 'DOCTOR'
+        LIMIT 1
+        `,
+        [`%${cleanMobile}%`]
+      )
 
-    const isValidPassword = await verifyPassword(password, row.password_hash)
-
-    if (!isValidPassword) {
-      const invalidResult: DoctorAuthResult = {
-        status: 'INVALID_CREDENTIALS',
-        message: 'Invalid username/email or password.',
+      if (userRes.rows.length === 0) {
+        const errorResult: DoctorAuthResult = {
+          status: 'INVALID_CREDENTIALS',
+          message: 'No doctor account registered with this phone number.',
+        }
+        return NextResponse.json(errorResult, { status: 404 })
       }
-      return NextResponse.json(invalidResult, { status: 401 })
+
+      row = userRes.rows[0]
+    } else {
+      if (!usernameOrEmail?.trim() || !password) {
+        const errorResult: DoctorAuthResult = {
+          status: 'INVALID_CREDENTIALS',
+          message: 'Invalid username/email or password.',
+        }
+        return NextResponse.json(errorResult, { status: 400 })
+      }
+
+      const cleanInput = usernameOrEmail.trim().toLowerCase()
+
+      const userRes = await db.query(
+        `
+        SELECT 
+          u.id AS user_id,
+          u.username,
+          u.email,
+          u.password_hash,
+          u.role,
+          u.is_active,
+          d.id AS doctor_id,
+          d.full_name,
+          d.mobile_number,
+          d.doctor_type,
+          d.specialty_id,
+          d.specialty_name,
+          d.medical_qualification,
+          d.experience_years,
+          d.license_number,
+          d.licensing_authority,
+          d.bio,
+          d.languages,
+          d.consultation_modes,
+          d.city,
+          d.state,
+          d.country,
+          d.verification_status,
+          d.account_status,
+          d.created_at,
+          d.updated_at
+        FROM users u
+        JOIN doctors d ON d.user_id = u.id
+        WHERE (LOWER(u.username) = $1 OR LOWER(u.email) = $1)
+          AND u.role = 'DOCTOR'
+        LIMIT 1
+        `,
+        [cleanInput]
+      )
+
+      if (userRes.rows.length === 0) {
+        const invalidResult: DoctorAuthResult = {
+          status: 'INVALID_CREDENTIALS',
+          message: 'Invalid username/email or password.',
+        }
+        return NextResponse.json(invalidResult, { status: 401 })
+      }
+
+      row = userRes.rows[0]
+
+      const isValidPassword = await verifyPassword(password, row.password_hash)
+
+      if (!isValidPassword) {
+        const invalidResult: DoctorAuthResult = {
+          status: 'INVALID_CREDENTIALS',
+          message: 'Invalid username/email or password.',
+        }
+        return NextResponse.json(invalidResult, { status: 401 })
+      }
     }
 
     // Check Verification & Account Statuses
