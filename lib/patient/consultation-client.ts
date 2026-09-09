@@ -9,7 +9,6 @@ export async function createConsultationRequest(
   payload: ConsultationRequestPayload
 ): Promise<{ success: boolean; data?: ConsultationRequest; error?: string }> {
   try {
-    // Validate essential required fields client-side
     const { patientDetails, consultationType, appointmentDate, preferredTime } = payload
 
     if (
@@ -29,32 +28,24 @@ export async function createConsultationRequest(
       }
     }
 
-    // Simulate API request delay
-    await new Promise((resolve) => setTimeout(resolve, 600))
+    const response = await fetch('/api/patient/consultation-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
 
-    // Generate secure reference ID (consultationRequestId)
-    const referenceId = 'REQ-' + Math.random().toString(36).substring(2, 9).toUpperCase()
+    const resData = await response.json()
 
-    const request: ConsultationRequest = {
-      id: referenceId,
-      consultationRequestId: referenceId,
-      payload: {
-        ...payload,
-        patientDetails: {
-          ...patientDetails,
-          fullName: patientDetails.fullName.trim(),
-          problem: patientDetails.problem.trim(),
-          cityTownVillage: patientDetails.cityTownVillage.trim(),
-        },
-      },
-      feeInINR: 5, // ₹5 appointment fee
-      status: RequestStatus.PENDING_PAYMENT,
-      createdAt: new Date().toISOString(),
+    if (!response.ok || !resData.success) {
+      return {
+        success: false,
+        error: resData.error || 'Failed to submit consultation request.',
+      }
     }
 
     return {
       success: true,
-      data: request,
+      data: resData.data,
     }
   } catch {
     return {
