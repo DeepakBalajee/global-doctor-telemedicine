@@ -2,9 +2,12 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
 import { validateDBSession } from '@/lib/auth/session'
+import { ensureDatabaseSeeded } from '@/lib/db/seed-db'
 import { PatientDashboardData } from '@/types/patient-auth'
 
 export async function GET() {
+  await ensureDatabaseSeeded()
+
   const cookieStore = cookies()
   const sessionToken = cookieStore.get('telemed_patient_session')
 
@@ -97,8 +100,8 @@ export async function GET() {
         a.consultation_request_id,
         a.doctor_id,
         d.full_name AS doctor_name,
-        d.type AS doctor_type,
-        s.name AS specialty_name,
+        d.doctor_type AS doctor_type,
+        COALESCE(d.specialty_name, 'General (MBBS)') AS specialty_name,
         a.consultation_type,
         a.problem,
         a.appointment_date,
@@ -109,7 +112,6 @@ export async function GET() {
         a.created_at
       FROM appointments a
       LEFT JOIN doctors d ON d.id = a.doctor_id
-      LEFT JOIN specialties s ON s.id = d.specialty_id
       WHERE a.patient_id = $1 OR a.patient_id = $2
       ORDER BY a.created_at DESC
       `,

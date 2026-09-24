@@ -91,9 +91,9 @@ export const DoctorLoginForm: React.FC = () => {
       const result = await response.json()
 
       if (result.status === 'SUCCESS' && result.redirectUrl) {
-        router.push(result.redirectUrl)
+        window.location.href = result.redirectUrl
       } else if (result.status === 'PENDING_VERIFICATION' && result.redirectUrl) {
-        router.push(result.redirectUrl)
+        window.location.href = result.redirectUrl
       } else {
         setErrorMessage(result.message || 'Invalid credentials or OTP code.')
       }

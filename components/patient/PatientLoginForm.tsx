@@ -91,7 +91,7 @@ export const PatientLoginForm: React.FC = () => {
       const result = await response.json()
 
       if (response.ok && result.success && result.redirectUrl) {
-        router.push(result.redirectUrl)
+        window.location.href = result.redirectUrl
       } else {
         setErrorMessage(result.message || 'Authentication failed. Please check details.')
       }
