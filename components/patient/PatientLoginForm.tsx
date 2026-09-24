@@ -3,13 +3,12 @@
 import React, { useState, FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Shield, User, UserPlus, Eye, EyeOff } from 'lucide-react'
+import { ArrowRight, Shield, User, UserPlus } from 'lucide-react'
 import { PasswordInput } from '@/components/auth/PasswordInput'
 import { AuthError } from '@/components/auth/AuthError'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
-import { loginPatientWithCredentials } from '@/lib/patient/patient-auth-client'
 
 export const PatientLoginForm: React.FC = () => {
   const router = useRouter()
@@ -19,68 +18,25 @@ export const PatientLoginForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const [authMethod, setAuthMethod] = useState<'PASSWORD' | 'OTP'>('PASSWORD')
-  const [mobileNumber, setMobileNumber] = useState('')
-  const [otpCode, setOtpCode] = useState('')
-  const [otpSentMessage, setOtpSentMessage] = useState<string | null>(null)
-  const [isSendingOtp, setIsSendingOtp] = useState(false)
-
-  const handleSendOtp = async () => {
-    if (!mobileNumber.trim()) {
-      setErrorMessage('Please enter your mobile number.')
-      return
-    }
-    setErrorMessage(null)
-    setIsSendingOtp(true)
-
-    try {
-      const res = await fetch('/api/auth/otp/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobileNumber: mobileNumber.trim(), role: 'PATIENT' }),
-      })
-      const data = await res.json()
-
-      if (res.ok && data.success) {
-        setOtpSentMessage(data.message + (data.otpCode ? ` (Demo Code: ${data.otpCode})` : ''))
-      } else {
-        setErrorMessage(data.error || 'Failed to send OTP code.')
-      }
-    } catch {
-      setErrorMessage('Unable to connect to server.')
-    } finally {
-      setIsSendingOtp(false)
-    }
-  }
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (isLoading) return
 
     setErrorMessage(null)
 
-    if (authMethod === 'OTP') {
-      if (!mobileNumber.trim() || !otpCode.trim()) {
-        setErrorMessage('Please enter both mobile number and 6-digit OTP code.')
-        return
-      }
-    } else {
-      if (!usernameOrEmail.trim()) {
-        setErrorMessage('Please enter your username or email address.')
-        return
-      }
-      if (!password) {
-        setErrorMessage('Please enter your password.')
-        return
-      }
+    if (!usernameOrEmail.trim()) {
+      setErrorMessage('Please enter your username or email address.')
+      return
+    }
+    if (!password) {
+      setErrorMessage('Please enter your password.')
+      return
     }
 
     setIsLoading(true)
 
     try {
-      const payload = authMethod === 'OTP'
-        ? { isOtpLogin: true, mobileNumber: mobileNumber.trim(), otpCode: otpCode.trim() }
-        : { usernameOrEmail: usernameOrEmail.trim(), password, rememberMe }
+      const payload = { usernameOrEmail: usernameOrEmail.trim(), password, rememberMe }
 
       const response = await fetch('/api/auth/patient/login', {
         method: 'POST',
@@ -118,118 +74,55 @@ export const PatientLoginForm: React.FC = () => {
           Patient Login
         </h2>
         <p className="text-xs text-slate-500 leading-relaxed">
-          Sign in using your Password or Phone Number OTP.
+          Sign in using your account credentials to access your patient dashboard.
         </p>
       </div>
 
-      {/* AUTH METHOD TAB TOGGLE */}
-      <div className="grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-bold">
-        <button
-          type="button"
-          onClick={() => { setAuthMethod('PASSWORD'); setErrorMessage(null); }}
-          className={`py-2 rounded-lg transition-all ${authMethod === 'PASSWORD' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'}`}
-        >
-          Password Sign In
-        </button>
-        <button
-          type="button"
-          onClick={() => { setAuthMethod('OTP'); setErrorMessage(null); }}
-          className={`py-2 rounded-lg transition-all ${authMethod === 'OTP' ? 'bg-white text-brand-700 shadow-xs' : 'text-slate-500'}`}
-        >
-          Phone Number OTP
-        </button>
-      </div>
-
-      {/* ERROR & OTP NOTIFICATION BANNERS */}
+      {/* ERROR BANNER */}
       <AuthError message={errorMessage || undefined} />
-
-      {otpSentMessage && (
-        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold">
-          {otpSentMessage}
-        </div>
-      )}
 
       {/* FORM */}
       <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-label="Patient login form">
-        
-        {authMethod === 'PASSWORD' ? (
-          <>
-            <Input
-              label="Username or Email"
-              placeholder="Enter patient username or email"
-              value={usernameOrEmail}
-              onChange={(e) => setUsernameOrEmail(e.target.value)}
-              autoComplete="username"
-              required
+        <Input
+          label="Username or Email"
+          placeholder="Enter patient username or email"
+          value={usernameOrEmail}
+          onChange={(e) => setUsernameOrEmail(e.target.value)}
+          autoComplete="username"
+          required
+          disabled={isLoading}
+          icon={<User className="w-4 h-4 text-brand-600" />}
+        />
+
+        <PasswordInput
+          label="Password"
+          placeholder="Enter your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          disabled={isLoading}
+        />
+
+        {/* REMEMBER ME & FORGOT PASSWORD */}
+        <div className="flex items-center justify-between pt-1 text-xs">
+          <label className="flex items-center gap-2 cursor-pointer select-none text-slate-700 font-medium">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
               disabled={isLoading}
-              icon={<User className="w-4 h-4 text-brand-600" />}
+              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
             />
+            Remember me
+          </label>
 
-            <PasswordInput
-              label="Password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-
-            {/* REMEMBER ME & FORGOT PASSWORD */}
-            <div className="flex items-center justify-between pt-1 text-xs">
-              <label className="flex items-center gap-2 cursor-pointer select-none text-slate-700 font-medium">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  disabled={isLoading}
-                  className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
-                />
-                Remember me
-              </label>
-
-              <Link
-                href="/patient/forgot-password"
-                className="font-semibold text-brand-600 hover:text-brand-700 hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700">Mobile Phone Number *</label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="+91 98765 43210"
-                  value={mobileNumber}
-                  onChange={(e) => setMobileNumber(e.target.value)}
-                  disabled={isLoading}
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="md"
-                  onClick={handleSendOtp}
-                  disabled={isSendingOtp || isLoading}
-                  className="shrink-0 text-xs font-bold border-brand-300 text-brand-700"
-                >
-                  {isSendingOtp ? 'Sending...' : 'Send OTP'}
-                </Button>
-              </div>
-            </div>
-
-            <Input
-              label="6-Digit OTP Code *"
-              placeholder="Enter 6-digit code"
-              value={otpCode}
-              onChange={(e) => setOtpCode(e.target.value)}
-              maxLength={6}
-              disabled={isLoading}
-            />
-          </>
-        )}
+          <Link
+            href="/patient/forgot-password"
+            className="font-semibold text-brand-600 hover:text-brand-700 hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
 
         {/* SUBMIT BUTTON */}
         <Button
@@ -250,7 +143,7 @@ export const PatientLoginForm: React.FC = () => {
             </span>
           ) : (
             <span className="inline-flex items-center justify-center gap-2">
-              {authMethod === 'OTP' ? 'Verify OTP & Sign In' : 'Sign In'} <ArrowRight className="w-4 h-4" />
+              Sign In <ArrowRight className="w-4 h-4" />
             </span>
           )}
         </Button>

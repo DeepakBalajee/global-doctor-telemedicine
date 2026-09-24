@@ -3,7 +3,7 @@
 import React, { useState, FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { User, Mail, Phone, Lock, Calendar, Globe, MapPin, CheckCircle, ArrowRight, UserCheck } from 'lucide-react'
+import { User, Mail, Phone, Calendar, Globe, MapPin, CheckCircle, UserCheck, ShieldCheck } from 'lucide-react'
 import { GenderOption } from '@/types/patient'
 import { SUPPORTED_LANGUAGES } from '@/data/languages'
 import { PasswordInput } from '@/components/auth/PasswordInput'
@@ -27,8 +27,84 @@ export const PatientRegisterForm: React.FC = () => {
   const [city, setCity] = useState('')
   const [town, setTown] = useState('')
 
+  // OTP Verification States
+  const [otpCode, setOtpCode] = useState('')
+  const [isOtpSent, setIsOtpSent] = useState(false)
+  const [isSendingOtp, setIsSendingOtp] = useState(false)
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false)
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false)
+  const [otpMessage, setOtpMessage] = useState<string | null>(null)
+
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const handleSendOtp = async () => {
+    if (!mobileNumber.trim() || mobileNumber.trim().length < 8) {
+      setErrorMessage('Please enter a valid mobile number before requesting SMS OTP.')
+      return
+    }
+
+    setErrorMessage(null)
+    setOtpMessage(null)
+    setIsSendingOtp(true)
+
+    try {
+      const res = await fetch('/api/auth/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobileNumber: mobileNumber.trim(), role: 'PATIENT' }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data.success) {
+        setIsOtpSent(true)
+        setOtpMessage(data.message || '6-digit OTP code sent successfully via SMS.')
+      } else {
+        setErrorMessage(data.error || data.message || 'Failed to send SMS OTP.')
+      }
+    } catch {
+      setErrorMessage('Unable to connect to SMS service. Please try again.')
+    } finally {
+      setIsSendingOtp(false)
+    }
+  }
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode.trim() || otpCode.trim().length !== 6) {
+      setErrorMessage('Please enter the 6-digit OTP code received via SMS.')
+      return
+    }
+
+    setErrorMessage(null)
+    setOtpMessage(null)
+    setIsVerifyingOtp(true)
+
+    try {
+      const res = await fetch('/api/auth/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mobileNumber: mobileNumber.trim(),
+          otpCode: otpCode.trim(),
+          role: 'PATIENT',
+        }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data.success) {
+        setIsPhoneVerified(true)
+        setOtpMessage('✓ Phone number verified successfully via SMS OTP.')
+      } else {
+        setErrorMessage(data.error || data.message || 'Invalid or expired OTP code.')
+      }
+    } catch {
+      setErrorMessage('Unable to verify OTP code. Please try again.')
+    } finally {
+      setIsVerifyingOtp(false)
+    }
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -47,6 +123,11 @@ export const PatientRegisterForm: React.FC = () => {
       !city.trim()
     ) {
       setErrorMessage('Please fill in all required registration fields.')
+      return
+    }
+
+    if (!isPhoneVerified) {
+      setErrorMessage('Please request and verify the 6-digit SMS OTP sent to your phone number before creating your account.')
       return
     }
 
@@ -77,7 +158,7 @@ export const PatientRegisterForm: React.FC = () => {
       })
 
       if (result.success && result.redirectUrl) {
-        router.push(result.redirectUrl)
+        window.location.href = result.redirectUrl
       } else {
         setErrorMessage(result.error || 'Failed to create patient account.')
       }
@@ -112,7 +193,7 @@ export const PatientRegisterForm: React.FC = () => {
             Create Patient Account
           </h1>
           <p className="text-xs text-slate-500">
-            Register to manage appointments, track consultation status, and access ₹5 receipts.
+            Fill in your details and verify your phone number via SMS OTP to create your patient dashboard.
           </p>
         </div>
 
@@ -130,6 +211,16 @@ export const PatientRegisterForm: React.FC = () => {
           className="p-4 rounded-xl bg-red-50 border border-red-200 text-xs font-semibold text-red-800 animate-in fade-in"
         >
           {errorMessage}
+        </div>
+      )}
+
+      {otpMessage && (
+        <div
+          role="status"
+          className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-900 animate-in fade-in flex items-center gap-2"
+        >
+          <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+          {otpMessage}
         </div>
       )}
 
@@ -176,17 +267,66 @@ export const PatientRegisterForm: React.FC = () => {
             />
           </div>
 
-          <div className="sm:col-span-2">
-            <Input
-              label="Mobile Number *"
-              placeholder="+91 98123 45678"
-              value={mobileNumber}
-              onChange={(e) => setMobileNumber(e.target.value)}
-              required
-              disabled={isLoading}
-              autoComplete="off"
-              icon={<Phone className="w-4 h-4" />}
-            />
+          {/* MOBILE NUMBER WITH REALTIME SMS OTP VERIFICATION */}
+          <div className="sm:col-span-2 space-y-2 bg-slate-50/80 p-4 rounded-xl border border-slate-200">
+            <label className="block text-xs font-bold text-slate-800">
+              Mobile Phone Number * {isPhoneVerified && <span className="text-emerald-600 font-extrabold ml-2">✓ Verified via SMS</span>}
+            </label>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex-1">
+                <Input
+                  placeholder="+91 98123 45678"
+                  value={mobileNumber}
+                  onChange={(e) => {
+                    setMobileNumber(e.target.value)
+                    setIsPhoneVerified(false)
+                  }}
+                  required
+                  disabled={isLoading || isPhoneVerified}
+                  autoComplete="off"
+                  icon={<Phone className="w-4 h-4" />}
+                />
+              </div>
+
+              {!isPhoneVerified && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  onClick={handleSendOtp}
+                  disabled={isSendingOtp || isLoading || !mobileNumber.trim()}
+                  className="shrink-0 text-xs font-bold border-brand-300 text-brand-700 bg-white hover:bg-brand-50"
+                >
+                  {isSendingOtp ? 'Sending SMS...' : isOtpSent ? 'Resend SMS OTP' : 'Send SMS OTP'}
+                </Button>
+              )}
+            </div>
+
+            {/* OTP VERIFICATION INPUT */}
+            {isOtpSent && !isPhoneVerified && (
+              <div className="pt-2 flex flex-col sm:flex-row gap-2 border-t border-slate-200/80 mt-2">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Enter 6-digit SMS OTP"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    maxLength={6}
+                    disabled={isLoading || isVerifyingOtp}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="md"
+                  onClick={handleVerifyOtp}
+                  disabled={isVerifyingOtp || isLoading || otpCode.trim().length !== 6}
+                  className="shrink-0 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  {isVerifyingOtp ? 'Verifying...' : 'Verify OTP'}
+                </Button>
+              </div>
+            )}
           </div>
 
           <div>
@@ -265,10 +405,10 @@ export const PatientRegisterForm: React.FC = () => {
           variant="primary"
           size="lg"
           fullWidth
-          disabled={isLoading}
-          className="mt-4 font-bold text-sm h-11 shadow-lg shadow-brand-600/20"
+          disabled={isLoading || !isPhoneVerified}
+          className={`mt-4 font-bold text-sm h-11 shadow-lg ${isPhoneVerified ? 'shadow-brand-600/20 bg-brand-600' : 'bg-slate-300 text-slate-500 cursor-not-allowed'}`}
         >
-          {isLoading ? 'Creating Patient Account...' : 'Create Account'}
+          {isLoading ? 'Creating Patient Account & Dashboard...' : isPhoneVerified ? 'Create Account & Dashboard' : 'Verify Mobile Number to Create Account'}
         </Button>
 
       </form>
